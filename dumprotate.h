@@ -27,6 +27,7 @@ typedef struct Dumprotate {
         off_t maxSize;
         int maxCount;
         off_t minEmptySpace;
+        char* dumpDir;
     } configFile;
 } Dumprotate;
 
