@@ -1,12 +1,12 @@
 #include "dumprotate.h"
 #include <string.h>
+#include <math.h>
 
 int parse_args(Dumprotate* drd, int argc, char** argv) {
     char currentFlag = '0';
     int res;
     off_t numOfBytesFinal;
     
-    //drd->maxCount = 5;
     for (int i = 1; i < argc; i++)
     {
         if (currentFlag == '0')
@@ -25,6 +25,7 @@ int parse_args(Dumprotate* drd, int argc, char** argv) {
                   currentFlag = argv[i][1]; 
                   break;
                case 'h':  
+                  drd->args.action = DUMPROTATE_HELP;
                   return 0;
                default:  
                   return 1;
@@ -57,7 +58,7 @@ int parse_args(Dumprotate* drd, int argc, char** argv) {
                   }
                   break;
                case 'e':  
-                  res = check_argument(&numOfBytes_final, argv[i]);
+                  res = check_argument(&numOfBytesFinal, argv[i]);
                   if (res != 0)
                   {
                       return 1;
@@ -105,15 +106,14 @@ int convert_to_bytes(off_t* numOfBytes, char* arg) {
         case 'k':
         case 'K':
             numOfBytes[0] = atoi(arg)*1024;
-            printf("%d\n",atoi(arg)*1024);
             return 0;
         case 'm':
         case 'M':
-            numOfBytes[0] = atoi(arg)*1024*1024;
+            numOfBytes[0] = atoi(arg)*pow(1024.0,2);
             return 0;
         case 'g':
         case 'G':
-            numOfBytes[0] = atoi(arg)*1024*1024*1024;
+            numOfBytes[0] = atoi(arg)*pow(1024.0,3);
             return 0;
         default:  
             return 1;
