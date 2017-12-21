@@ -7,14 +7,14 @@ DUMPROTATE_O := dumprotate.o args.o config.o dr_main.o dr_help.o
 
 .PHONY: all clean clean_daemon
 
-all: dumprotated
+all: dumprot
 
 clean: clean_daemon
 
 clean_daemon:
 	$(RM) -f $(DUMPROTATE_O) dumprotate
 
-dumprotated: $(DUMPROTATE_O)
+dumprot: $(DUMPROTATE_O)
 	$(CC) $(LDFLAGS) -o $@ $^
 
 %.o: %.c

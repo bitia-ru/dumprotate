@@ -13,13 +13,14 @@ typedef struct Dumprotate {
     off_t maxSize;
     int maxCount;
     off_t minEmptySpace;
-    DumprotateAction action;
 
     struct {
         off_t maxSize;
         int maxCount;
         off_t minEmptySpace;
         char* configPath;
+        char* dumpDir;
+        DumprotateAction action;
     } args;
 
     struct {
