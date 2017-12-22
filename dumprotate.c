@@ -27,7 +27,7 @@ int main(int argc, char** argv) {
         return res;
 
     if (!actionConfigDisusage[drd.args.action]) {
-        res = load_config(&drd, argc, argv);
+        res = load_config(&drd);
         if (res != 0)
             return res;
     }
