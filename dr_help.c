@@ -5,20 +5,20 @@
 int dr_help() {
     puts("Usage: dumprot [OPTION...]");
     puts("");
-    printf("\t-h, --help\tdisplay this help and exit\n");
-    printf("\t-s\t\tlimit on the maximum storage size\n");
-    printf("\t\t\t\tSIZE — number of bytes,\n");
-    printf("\t\t\t\tSIZEk/SIZEK — number of KB,\n");
-    printf("\t\t\t\tSIZEm/SIZEM — number of MB,\n");
-    printf("\t\t\t\tSIZEg/SIZEG — number of GB\n");
-    printf("\t-n\t\tlimit on the number of dumps\n");
-    printf("\t-e\t\tlimit on the minimum amount of free space in the mount point\n");
-    printf("\t\t\t\tSIZE — number of bytes,\n");
-    printf("\t\t\t\tSIZEk/SIZEK — number of KB,\n");
-    printf("\t\t\t\tSIZEm/SIZEM — number of MB,\n");
-    printf("\t\t\t\tSIZEg/SIZEG — number of GB\n");
-    printf("\t-c\t\tconfig file path\n");
-    printf("\t-d\t\tdump directory path\n");
+    puts("\t-h, --help\tdisplay this help and exit");
+    puts("\t-s\t\tlimit on the maximum storage size");
+    puts("\t\t\t\tSIZE — number of bytes,");
+    puts("\t\t\t\tSIZEk/SIZEK — number of KB,");
+    puts("\t\t\t\tSIZEm/SIZEM — number of MB,");
+    puts("\t\t\t\tSIZEg/SIZEG — number of GB");
+    puts("\t-n\t\tlimit on the number of dumps");
+    puts("\t-e\t\tlimit on the minimum amount of free space in the mount point");
+    puts("\t\t\t\tSIZE — number of bytes,");
+    puts("\t\t\t\tSIZEk/SIZEK — number of KB,");
+    puts("\t\t\t\tSIZEm/SIZEM — number of MB,");
+    puts("\t\t\t\tSIZEg/SIZEG — number of GB");
+    puts("\t-c\t\tconfig file path");
+    puts("\t-d\t\tdump directory path");
     puts("");
     return 0;
 }
