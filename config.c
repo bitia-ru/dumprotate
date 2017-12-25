@@ -6,18 +6,12 @@
 #include "ssize2bytes.h" // ssize2bytes
 #include "dumprotate.h"
 
-int load_config(Dumprotate* drd) {
+int load_config(Dumprotate* drd, const char* configPath) {
     dictionary * ini;
-    const char * configPath;
     const char* str;
     off_t numOfBytes;
     int res;
 
-    if (!drd->args.configPath) {
-        configPath = "/etc/dumprotate.conf";
-    } else {
-        configPath = drd->args.configPath;
-    }
     if (access(configPath, F_OK) == -1) {
         return ENOENT;
     }

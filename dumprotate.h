@@ -33,7 +33,7 @@ int dr_help(Dumprotate* drd);
 /* ---------------- */
 
 int parse_args(Dumprotate* drd, int argc, char** argv);
-int load_config(Dumprotate* drd);
+int load_config(Dumprotate* drd, const char* configPath);
 
 /* Option getters: */
 off_t opt_max_size(Dumprotate* drd);
@@ -41,6 +41,7 @@ int opt_max_count(Dumprotate* drd);
 off_t opt_min_empty_space(Dumprotate* drd);
 const char* opt_dump_dir(Dumprotate* drd);
 DumprotateAction opt_action(Dumprotate* drd);
+const char* opt_config_path(Dumprotate* drd);
 /* --------------- */
 
 

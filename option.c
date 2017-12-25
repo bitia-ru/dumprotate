@@ -24,3 +24,7 @@ const char* opt_dump_dir(Dumprotate* drd) {
 DumprotateAction opt_action(Dumprotate* drd) {
     return drd->args.action;
 }
+
+const char* opt_config_path(Dumprotate* drd) {
+    return drd->args.configPath != NULL ? drd->args.configPath : "/etc/dumprotate.conf";
+}
