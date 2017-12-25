@@ -1,5 +1,6 @@
 #include <stdio.h> // sscanf
-#include <string.h> // strlen
+#include <string.h> // strlen, strcmp
+#include <errno.h> // EINVAL
 
 #include "dumprotate.h"
 #include "ssize2bytes.h" // ssize2bytes
@@ -9,11 +10,17 @@ int parse_args(Dumprotate* drd, int argc, char** argv) {
     int res;
     off_t numOfBytes;
     int val;
+    char c;
 
     for (int i = 1; i < argc; i++) {
         if (currentFlag == '0') {
             if ((strlen(argv[i]) != 2) || (argv[i][0] != '-')) {
-                return 1;
+                if (strcmp(argv[i],"--help") == 0) {
+                    drd->args.action = DUMPROTATE_HELP;
+                    return 0;
+                } else {
+                    return EINVAL;
+                }
             }
             switch (argv[i][1]) {
                 case 's':
@@ -27,22 +34,22 @@ int parse_args(Dumprotate* drd, int argc, char** argv) {
                     drd->args.action = DUMPROTATE_HELP;
                     return 0;
                 default:
-                    return 1;
+                    return EINVAL;
             }
         } else {
             switch (currentFlag) {
                 case 's':
                     res = ssize2bytes(argv[i], &numOfBytes);
                     if (res != 0) {
-                        return 1;
+                        return EINVAL;
                     } else {
                         drd->args.maxSize = numOfBytes;
                     }
                     break;
                 case 'n':
-                    res = sscanf(argv[i], "%d", &val);
+                    res = sscanf(argv[i], "%d%c", &val, &c);
                     if (res != 1) {
-                        return 1;
+                        return EINVAL;
                     } else {
                         drd->args.maxCount = val;
                     }
@@ -50,7 +57,7 @@ int parse_args(Dumprotate* drd, int argc, char** argv) {
                 case 'e':
                     res = ssize2bytes(argv[i], &numOfBytes);
                     if (res != 0) {
-                        return 1;
+                        return EINVAL;
                     } else {
                         drd->args.minEmptySpace = numOfBytes;
                     }

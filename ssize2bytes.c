@@ -9,8 +9,9 @@
 int ssize2bytes(const char* str, off_t* numOfBytes) {
     off_t i;
     char a;
+    char c;
     int res;
-    res = sscanf(str, "%ld%c", &i, &a);
+    res = sscanf(str, "%ld%c%c", &i, &a, &c);
     switch (res) {
         case 1:
             *numOfBytes = i;
