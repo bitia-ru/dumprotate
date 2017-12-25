@@ -28,7 +28,7 @@ int load_config(Dumprotate* drd) {
     str = iniparser_getstring(ini, "main:maxSize", "0");
     res = ssize2bytes(str, &numOfBytes);
     if (res != 0) {
-        return EINVAL;
+        return res;
     }
     drd->configFile.maxSize = numOfBytes;
     res = iniparser_getint(ini, "main:maxCount", 0);
@@ -36,7 +36,7 @@ int load_config(Dumprotate* drd) {
     str = iniparser_getstring(ini, "main:minEmptySpace", "0");
     res = ssize2bytes(str, &numOfBytes);
     if (res != 0) {
-        return EINVAL;
+        return res;
     }
     drd->configFile.minEmptySpace = numOfBytes;
     str = iniparser_getstring(ini, "main:dumpDir", NULL);

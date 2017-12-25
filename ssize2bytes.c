@@ -1,6 +1,8 @@
 #include <stdio.h> // sscanf
 #include <errno.h> // EINVAL
 
+#include "ssize2bytes.h"
+
 #define K (1024UL)
 #define M (1024UL*1024UL)
 #define G (1024UL*1024UL*1024UL)
@@ -9,7 +11,7 @@ int ssize2bytes(const char* str, off_t* numOfBytes) {
     off_t i;
     char a, c;
     int res;
-    res = sscanf(str, "%lld%c%c", &i, &a, &c);
+    res = sscanf(str, "%ld%c%c", &i, &a, &c);
     switch (res) {
         case 1:
             *numOfBytes = i;

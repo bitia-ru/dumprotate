@@ -2,8 +2,8 @@
 #include <string.h> // strlen, strcmp
 #include <errno.h> // EINVAL
 
-#include "dumprotate.h"
 #include "ssize2bytes.h" // ssize2bytes
+#include "dumprotate.h"
 
 int parse_args(Dumprotate* drd, int argc, char** argv) {
     char currentFlag = 0;
@@ -42,7 +42,7 @@ int parse_args(Dumprotate* drd, int argc, char** argv) {
             case 's':
                 res = ssize2bytes(argv[i], &numOfBytes);
                 if (res != 0) {
-                    return EINVAL;
+                    return res;
                 }
                 drd->args.maxSize = numOfBytes;
                 break;
@@ -56,7 +56,7 @@ int parse_args(Dumprotate* drd, int argc, char** argv) {
             case 'e':
                 res = ssize2bytes(argv[i], &numOfBytes);
                 if (res != 0) {
-                    return EINVAL;
+                    return res;
                 }
                 drd->args.minEmptySpace = numOfBytes;
                 break;
