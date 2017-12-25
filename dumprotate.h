@@ -18,8 +18,8 @@ typedef struct Dumprotate {
         off_t maxSize;
         int maxCount;
         off_t minEmptySpace;
-        char* configPath;
-        char* dumpDir;
+        const char* configPath;
+        const char* dumpDir;
         DumprotateAction action;
     } args;
 
