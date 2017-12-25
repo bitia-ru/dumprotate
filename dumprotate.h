@@ -18,8 +18,8 @@ typedef struct Dumprotate {
         off_t maxSize;
         int maxCount;
         off_t minEmptySpace;
-        char* configPath;
-        char* dumpDir;
+        const char* configPath;
+        const char* dumpDir;
         DumprotateAction action;
     } args;
 
@@ -32,7 +32,7 @@ typedef struct Dumprotate {
 } Dumprotate;
 
 int parse_args(Dumprotate* drd, int argc, char** argv);
-int load_config(Dumprotate* drd, int argc, char** argv);
+int load_config(Dumprotate* drd);
 int compute_params(Dumprotate* drd);
 
 int dr_main(Dumprotate* drd);
