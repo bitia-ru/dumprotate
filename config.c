@@ -1,63 +1,65 @@
 #include <stdio.h> // sscanf
 #include <unistd.h> // access
-#include <iniparser.h> // iniparser_load, iniparser_getstring
+#include <iniparser.h> // iniparser_*
+#include <errno.h> // ENOENT, EACCESS, EINVAL
 
 #include "dumprotate.h"
 
-int convert_val_to_bytes(char* str, off_t* numOfBytes);
+int convert_val_to_bytes(const char* str, off_t* numOfBytes);
 
 int load_config(Dumprotate* drd) {
     dictionary * ini;
-    char * ini_name;
-    char* str;
+    const char * configPath;
+    const char* str;
     off_t numOfBytes;
     int res;
     int val;
 
     if (!drd->args.configPath) {
-        ini_name = "/etc/dumprotate.conf";
+        configPath = "/etc/dumprotate.conf";
     } else {
-        ini_name = drd->args.configPath;
+        configPath = drd->args.configPath;
     }
-    if (access(ini_name, F_OK) == -1) {
-        return 1;
+    if (access(configPath, F_OK) == -1) {
+        return ENOENT;
     }
-    if (access(ini_name, R_OK) == -1) {
-        return 1;
+    if (access(configPath, R_OK) == -1) {
+        return EACCES;
     }
-    ini = iniparser_load(ini_name);
-    str = iniparser_getstring(ini, "main:maxSize", "");
-    if (str != "") {
+    ini = iniparser_load(configPath);
+    if (!drd->args.maxSize) {
+        str = iniparser_getstring(ini, "main:maxSize", "0");
         res = convert_val_to_bytes(str, &numOfBytes);
         if (res != 0) {
-            return 1;
+            return EINVAL;
         } else {
             drd->args.maxSize = numOfBytes;
         }
     }
-    res = iniparser_getint(ini, "main:maxCount", -1);
-    if (res != -1) {
+    if (!drd->args.maxCount) {
+        res = iniparser_getint(ini, "main:maxCount", 0);
         drd->args.maxCount = res;
     }
-    str = iniparser_getstring(ini, "main:minEmptySpace", "");
-    if (str != "") {
+    if (!drd->args.minEmptySpace) {
+        str = iniparser_getstring(ini, "main:minEmptySpace", "0");
         res = convert_val_to_bytes(str, &numOfBytes);
         if (res != 0) {
-            return 1;
+            return EINVAL;
         } else {
             drd->args.minEmptySpace = numOfBytes;
         }
     }
-    str = iniparser_getstring(ini, "main:dumpDir", "");
-    if (str != "") {
-        drd->args.dumpDir = str;
+    if (!drd->args.dumpDir) {
+        str = iniparser_getstring(ini, "main:dumpDir", "");
+        if (str != "") {
+            drd->args.dumpDir = str;
+        }
     }
-    iniparser_freedict(ini);
 
     return 0;
 }
 
-int convert_val_to_bytes(char* str, off_t* numOfBytes) {
+int convert_val_to_bytes(const char* str, off_t* numOfBytes) {
     off_t i;
     char a;
     int res;
