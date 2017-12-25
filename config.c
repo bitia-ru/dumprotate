@@ -26,34 +26,24 @@ int load_config(Dumprotate* drd) {
         return EACCES;
     }
     ini = iniparser_load(configPath);
-    if (!drd->args.maxSize) {
-        str = iniparser_getstring(ini, "main:maxSize", "0");
-        res = ssize2bytes(str, &numOfBytes);
-        if (res != 0) {
-            return EINVAL;
-        } else {
-            drd->args.maxSize = numOfBytes;
-        }
+    str = iniparser_getstring(ini, "main:maxSize", "0");
+    res = ssize2bytes(str, &numOfBytes);
+    if (res != 0) {
+        return EINVAL;
+    } else {
+        drd->configFile.maxSize = numOfBytes;
     }
-    if (!drd->args.maxCount) {
-        res = iniparser_getint(ini, "main:maxCount", 0);
-        drd->args.maxCount = res;
+    res = iniparser_getint(ini, "main:maxCount", 0);
+    drd->configFile.maxCount = res;
+    str = iniparser_getstring(ini, "main:minEmptySpace", "0");
+    res = ssize2bytes(str, &numOfBytes);
+    if (res != 0) {
+        return EINVAL;
+    } else {
+        drd->configFile.minEmptySpace = numOfBytes;
     }
-    if (!drd->args.minEmptySpace) {
-        str = iniparser_getstring(ini, "main:minEmptySpace", "0");
-        res = ssize2bytes(str, &numOfBytes);
-        if (res != 0) {
-            return EINVAL;
-        } else {
-            drd->args.minEmptySpace = numOfBytes;
-        }
-    }
-    if (!drd->args.dumpDir) {
-        str = iniparser_getstring(ini, "main:dumpDir", "");
-        if (str != "") {
-            drd->args.dumpDir = str;
-        }
-    }
+    str = iniparser_getstring(ini, "main:dumpDir", NULL);
+    drd->configFile.dumpDir = str;
 
     return 0;
 }
