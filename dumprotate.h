@@ -29,7 +29,7 @@ typedef struct Dumprotate {
 
 /* Target routines: */
 int dr_main(Dumprotate* drd);
-int dr_help(Dumprotate* drd);
+int dr_help();
 /* ---------------- */
 
 int parse_args(Dumprotate* drd, int argc, char** argv);
