@@ -3,8 +3,8 @@
 #include <iniparser.h> // iniparser_*
 #include <errno.h> // ENOENT, EACCESS, EINVAL
 
-#include "dumprotate.h"
 #include "ssize2bytes.h" // ssize2bytes
+#include "dumprotate.h"
 
 int load_config(Dumprotate* drd) {
     dictionary * ini;
@@ -12,7 +12,6 @@ int load_config(Dumprotate* drd) {
     const char* str;
     off_t numOfBytes;
     int res;
-    int val;
 
     if (!drd->args.configPath) {
         configPath = "/etc/dumprotate.conf";
@@ -30,18 +29,16 @@ int load_config(Dumprotate* drd) {
     res = ssize2bytes(str, &numOfBytes);
     if (res != 0) {
         return EINVAL;
-    } else {
-        drd->configFile.maxSize = numOfBytes;
     }
+    drd->configFile.maxSize = numOfBytes;
     res = iniparser_getint(ini, "main:maxCount", 0);
     drd->configFile.maxCount = res;
     str = iniparser_getstring(ini, "main:minEmptySpace", "0");
     res = ssize2bytes(str, &numOfBytes);
     if (res != 0) {
         return EINVAL;
-    } else {
-        drd->configFile.minEmptySpace = numOfBytes;
     }
+    drd->configFile.minEmptySpace = numOfBytes;
     str = iniparser_getstring(ini, "main:dumpDir", NULL);
     drd->configFile.dumpDir = str;
 
