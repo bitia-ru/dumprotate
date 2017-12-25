@@ -4,8 +4,7 @@
 #include <errno.h> // ENOENT, EACCESS, EINVAL
 
 #include "dumprotate.h"
-
-int convert_val_to_bytes(const char* str, off_t* numOfBytes);
+#include "ssize2bytes.h" // ssize2bytes
 
 int load_config(Dumprotate* drd) {
     dictionary * ini;
@@ -29,7 +28,7 @@ int load_config(Dumprotate* drd) {
     ini = iniparser_load(configPath);
     if (!drd->args.maxSize) {
         str = iniparser_getstring(ini, "main:maxSize", "0");
-        res = convert_val_to_bytes(str, &numOfBytes);
+        res = ssize2bytes(str, &numOfBytes);
         if (res != 0) {
             return EINVAL;
         } else {
@@ -42,7 +41,7 @@ int load_config(Dumprotate* drd) {
     }
     if (!drd->args.minEmptySpace) {
         str = iniparser_getstring(ini, "main:minEmptySpace", "0");
-        res = convert_val_to_bytes(str, &numOfBytes);
+        res = ssize2bytes(str, &numOfBytes);
         if (res != 0) {
             return EINVAL;
         } else {
@@ -57,35 +56,4 @@ int load_config(Dumprotate* drd) {
     }
 
     return 0;
-}
-
-int convert_val_to_bytes(const char* str, off_t* numOfBytes) {
-    off_t i;
-    char a;
-    int res;
-    res = sscanf(str, "%ld%c", &i, &a);
-    switch (res) {
-        case 1:
-            *numOfBytes = i;
-            return 0;
-        case 2:
-            switch (a) {
-                case 'k':
-                case 'K':
-                    *numOfBytes = i * 1024;
-                    return 0;
-                case 'm':
-                case 'M':
-                    *numOfBytes = i * (1024 << 1);
-                    return 0;
-                case 'g':
-                case 'G':
-                    *numOfBytes = i * (1024 << 2);
-                    return 0;
-                default:
-                    return 1;
-            }
-        default:
-            return 1;
-    }
 }
