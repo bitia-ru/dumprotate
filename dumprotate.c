@@ -31,13 +31,6 @@ int main(int argc, char** argv) {
             return res;
     }
 
-    res = compute_params(&drd);
-    if (res != 0)
-        return res;
-
     return 0;
 }
 
-int compute_params(Dumprotate* drd) {
-    return 0;
-}

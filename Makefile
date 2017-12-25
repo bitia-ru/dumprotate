@@ -3,7 +3,14 @@ MANDATORY_LDFLAGS := -liniparser-4
 CFLAGS ?= -g3 -O2
 CC := gcc
 
-DUMPROTATE_O := dumprotate.o args.o config.o dr_main.o dr_help.o ssize2bytes.o
+DUMPROTATE_O := \
+	dumprotate.o \
+	args.o \
+	config.o \
+	dr_main.o \
+	dr_help.o \
+	ssize2bytes.o \
+	option.o
 
 
 .PHONY: all clean clean_daemon
