@@ -11,14 +11,14 @@
 
 #define STARTPATHLENGTH (64U)
 #define STARTBUFFERSIZE (4096U)
-#define STARTFDATASIZE (32U)
 
 typedef struct FileData {
     time_t createFileTime;
     char * fileName;
 } FileData;
 
-int find_insert_position(FileData* fData, time_t createTime, int length);
+FileData * get_list_of_dump_files(const char* dumpDir, int maxCount, int * currentNumOfDumps);
+FileData * find_latest(FileData * fDataOld, int length);
 
 int dr_main(Dumprotate* drd) {
     const char* dumpDir = opt_dump_dir(drd);
@@ -30,47 +30,37 @@ int dr_main(Dumprotate* drd) {
 
     int maxCount = opt_max_count(drd);
     if (maxCount != 0) {
-        DIR *dir;
-
-        if ((dir = opendir(dumpDir)) != NULL) {
-            struct dirent *ent;
-            struct stat sb;
-            int currentNumOfDumps = 0;
-            int currentFDataSize = STARTFDATASIZE;
-            FileData *fData = (FileData *) malloc(currentFDataSize * sizeof (struct FileData));
-            while ((ent = readdir(dir)) != NULL) {
-                if ((strcmp(ent->d_name, ".") == 0) || (strcmp(ent->d_name, "..") == 0)) {
-                    continue;
+        int currentNumOfDumps = 0;
+        FileData *fData = get_list_of_dump_files(dumpDir, maxCount, &currentNumOfDumps);
+        int numOfFilesToDel = currentNumOfDumps + 1 - maxCount;
+        if (numOfFilesToDel > 0) {
+            FileData *fDataOld = (FileData *) malloc(numOfFilesToDel * sizeof (struct FileData));
+            FileData *currentLatest;
+            currentLatest = &(fDataOld[0]);
+            for (int i = 0; i < numOfFilesToDel; i++) {
+                fDataOld[i].createFileTime = fData[i].createFileTime;
+                fDataOld[i].fileName = fData[i].fileName;
+                if (currentLatest->createFileTime < fDataOld[i].createFileTime) {
+                    currentLatest = &(fDataOld[i]);
                 }
-                if (currentFDataSize <= currentNumOfDumps) {
-                    currentFDataSize = currentFDataSize << 1;
-                    fData = (FileData *) realloc(fData, currentFDataSize * sizeof (struct FileData));
-                }
-                size_t currentPathLength = snprintf(NULL, 0, "%s/%s", dumpDir, ent->d_name);
-                char *fileFullPath = (char *) malloc(currentPathLength);
-                sprintf(fileFullPath, "%s/%s", dumpDir, ent->d_name);
-                stat(fileFullPath, &sb);
-                free(fileFullPath);
-                int pos = find_insert_position(fData, sb.st_ctime, currentNumOfDumps);
-                for (int i = currentNumOfDumps; i > pos; i--) {
-                    fData[i].createFileTime = fData[i - 1].createFileTime;
-                    fData[i].fileName = fData[i - 1].fileName;
-                }
-                fData[pos].createFileTime = sb.st_ctime;
-                fData[pos].fileName = ent->d_name;
-                currentNumOfDumps++;
             }
-            closedir(dir);
-            while (currentNumOfDumps + 1 > maxCount) {
-                size_t currentPathLength = snprintf(NULL, 0, "%s/%s", dumpDir, fData[currentNumOfDumps - 1].fileName);
+            for (int i = numOfFilesToDel; i < currentNumOfDumps; i++) {
+                if (currentLatest->createFileTime > fData[i].createFileTime) {
+                    currentLatest->createFileTime = fData[i].createFileTime;
+                    currentLatest->fileName = fData[i].fileName;
+                    currentLatest = find_latest(fDataOld, numOfFilesToDel);
+                }
+            }
+            for (int i = 0; i < numOfFilesToDel; i++) {
+                size_t currentPathLength = snprintf(NULL, 0, "%s/%s", dumpDir, fDataOld[i].fileName);
                 char *fileFullPath = (char *) malloc(currentPathLength);
-                sprintf(fileFullPath, "%s/%s", dumpDir, fData[currentNumOfDumps - 1].fileName);
+                sprintf(fileFullPath, "%s/%s", dumpDir, fDataOld[i].fileName);
                 int res = remove(fileFullPath);
                 free(fileFullPath);
-                currentNumOfDumps--;
             }
-            free(fData);
+            free(fDataOld);
         }
+        free(fData);
     }
 
     time_t rawtime;
@@ -118,27 +108,41 @@ int dr_main(Dumprotate* drd) {
     return 0;
 }
 
-int find_insert_position(FileData* fData, time_t createTime, int length) {
-    if (length == 0) {
-        return 0;
+FileData * get_list_of_dump_files(const char* dumpDir, int maxCount, int * currentNumOfDumps) {
+    DIR *dir;
+    dir = opendir(dumpDir);
+    struct dirent *ent;
+    struct stat sb;
+    int currentFDataSize = maxCount;
+    FileData *fData = (FileData *) malloc(currentFDataSize * sizeof (struct FileData));
+    while ((ent = readdir(dir)) != NULL) {
+        if ((strcmp(ent->d_name, ".") == 0) || (strcmp(ent->d_name, "..") == 0)) {
+            continue;
+        }
+        if (currentFDataSize <= *currentNumOfDumps) {
+            currentFDataSize = currentFDataSize << 1;
+            fData = (FileData *) realloc(fData, currentFDataSize * sizeof (struct FileData));
+        }
+        size_t currentPathLength = snprintf(NULL, 0, "%s/%s", dumpDir, ent->d_name);
+        char *fileFullPath = (char *) malloc(currentPathLength);
+        sprintf(fileFullPath, "%s/%s", dumpDir, ent->d_name);
+        stat(fileFullPath, &sb);
+        free(fileFullPath);
+        fData[*currentNumOfDumps].createFileTime = sb.st_ctime;
+        fData[*currentNumOfDumps].fileName = ent->d_name;
+        (*currentNumOfDumps)++;
     }
-    int i_current;
-    int i_start = 0;
-    int i_finish = length - 1;
-    while (i_start + 1 < i_finish) {
-        i_current = (i_start + i_finish) / 2 + (i_start + i_finish) % 2;
-        if (fData[i_current].createFileTime > createTime) {
-            i_start = i_current;
+    closedir(dir);
+    return fData;
+}
 
-        } else {
-            i_finish = i_current;
+FileData * find_latest(FileData * fDataOld, int length) {
+    FileData * currentLatest;
+    currentLatest = &(fDataOld[0]);
+    for (int i = 0; i < length; i++) {
+        if (currentLatest->createFileTime < fDataOld[i].createFileTime) {
+            currentLatest = &(fDataOld[i]);
         }
     }
-    if (fData[i_finish].createFileTime > createTime) {
-        return i_finish + 1;
-    }
-    if (fData[i_start].createFileTime > createTime) {
-        return i_finish;
-    }
-    return i_start;
+    return currentLatest;
 }
