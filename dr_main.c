@@ -8,8 +8,8 @@
 
 #include "dumprotate.h"
 
-#define STARTPATHLENGTH (64U)
-#define STARTBUFFERSIZE (4096U)
+#define START_PATH_LENGTH (64U)
+#define START_BUFFER_SIZE (4096U)
 
 int dr_main(Dumprotate* drd) {
     const char* dumpDir = opt_dump_dir(drd);
@@ -22,7 +22,7 @@ int dr_main(Dumprotate* drd) {
     time(&rawtime);
     struct tm *currentDateTime;
     currentDateTime = localtime(&rawtime);
-    size_t currentPathLength = STARTPATHLENGTH;
+    size_t currentPathLength = START_PATH_LENGTH;
     char *fileName = (char *) malloc(currentPathLength);
     size_t res = strftime(fileName, currentPathLength, "%c.dump", currentDateTime);
     while (res == 0) {
@@ -48,16 +48,16 @@ int dr_main(Dumprotate* drd) {
     free(fileFullPathBase);
     FILE * outputFile = fopen(fileFullPathFinal, "wb");
     free(fileFullPathFinal);
-    if (outputFile == 0) {
+    if (outputFile == NULL) {
         return EACCES;
     }
     FILE * inputFile = freopen(NULL, "rb", stdin);
-    char buffer[STARTBUFFERSIZE];
+    char buffer[START_BUFFER_SIZE];
     ssize_t readedBytes;
-    readedBytes = read(STDIN_FILENO, buffer, STARTBUFFERSIZE);
+    readedBytes = read(STDIN_FILENO, buffer, START_BUFFER_SIZE);
     while (readedBytes != 0) {
         fwrite(buffer, readedBytes, 1, outputFile);
-        readedBytes = read(STDIN_FILENO, buffer, STARTBUFFERSIZE);
+        readedBytes = read(STDIN_FILENO, buffer, START_BUFFER_SIZE);
     }
     fclose(outputFile);
     return 0;
