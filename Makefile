@@ -20,7 +20,7 @@ all: dumprot
 clean: clean_daemon
 
 clean_daemon:
-	$(RM) -f $(DUMPROTATE_O) dumprotate
+	$(RM) -f $(DUMPROTATE_O) dumprot
 
 dumprot: $(DUMPROTATE_O)
 	$(CC) $(MANDATORY_LDFLAGS) $(LDFLAGS) -o $@ $^
