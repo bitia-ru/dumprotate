@@ -29,7 +29,9 @@ int main(int argc, char** argv) {
         res = load_config(&drd, opt_config_path(&drd));
         if (res != 0)
             return res;
-        return 0;
+        res = dr_main(&drd);
+        if (res != 0)
+            return res;
     }
     dr_help();
 }
