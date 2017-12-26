@@ -1,52 +1,65 @@
-#include <stdio.h> // freopen, fopen, fread, fwrite, sprintf
+#include <stdio.h> // freopen, fopen, fread, fwrite, feof, sprintf, snprintf
 #include <time.h> // strftime
-#include <string.h> // strcpy
+#include <string.h> // strcpy, strlen
 #include <unistd.h> // access
 #include <sys/stat.h> // stat
 #include <errno.h> // ENOENT, EACCES
+#include <stdlib.h> // malloc, realloc, free
 
 #include "dumprotate.h"
 
+#define STARTPATHLENGTH (64U)
+#define STARTBUFFERSIZE (4U)
+
 int dr_main(Dumprotate* drd) {
-    time_t rawtime;
-    struct tm *currentDateTime;
-    char fileName[80];
-    char fileFullPath[256];
-    char fileFullPathCopy[256];
-    char buffer[2];
-    FILE * outputFile;
-    FILE * inputFile;
-    int i;
-    size_t sizeOfInput;
-    const char* dumpDir;
+    const char* dumpDir = opt_dump_dir(drd);
+
     struct stat st = {0};
-
-    time(&rawtime);
-
-    currentDateTime = localtime(&rawtime);
-
-    strftime(fileName, 80, "%c.dump", currentDateTime);
-    dumpDir = opt_dump_dir(drd);
-
     if (stat(dumpDir, &st) == -1) {
         return ENOENT;
     }
-    sprintf(fileFullPath, "%s/%s", dumpDir, fileName);
-    strcpy(fileFullPathCopy, fileFullPath);
-    i = 1;
-    while (access(fileFullPathCopy, F_OK) != -1) {
-        sprintf(fileFullPathCopy, "%s.%d", fileFullPath, i);
+    time_t rawtime;
+    time(&rawtime);
+    struct tm *currentDateTime;
+    currentDateTime = localtime(&rawtime);
+    size_t currentPathLength = STARTPATHLENGTH;
+    char *fileName = (char *) malloc(currentPathLength);
+    size_t res = strftime(fileName, currentPathLength, "%c.dump", currentDateTime);
+    while (res == 0) {
+        currentPathLength = currentPathLength<<1;
+        fileName = (char *) realloc (fileName,currentPathLength);
+        res = strftime(fileName, currentPathLength, "%c.dump", currentDateTime);
+    }
+    currentPathLength = snprintf(NULL, 0, "%s/%s", dumpDir, fileName);
+    char *fileFullPathBase = (char *) malloc(currentPathLength);
+    printf("%s\n",fileName);
+    sprintf(fileFullPathBase, "%s/%s", dumpDir, fileName);
+    free(fileName);
+    char *fileFullPathFinal = (char *) malloc(currentPathLength);
+    strcpy(fileFullPathFinal, fileFullPathBase);
+    int i = 1;
+    while (access(fileFullPathFinal, F_OK) != -1) {
+        currentPathLength = snprintf(NULL,0, "%s.%d", fileFullPathBase, i);
+        if (currentPathLength > strlen(fileFullPathFinal)){
+            fileFullPathFinal = (char *) realloc (fileFullPathFinal,currentPathLength);
+        }
+        sprintf(fileFullPathFinal, "%s.%d", fileFullPathBase, i);
         i++;
     }
-    outputFile = fopen(fileFullPathCopy, "wb");
+    free(fileFullPathBase);
+    FILE * outputFile = fopen(fileFullPathFinal, "wb");
+    free(fileFullPathFinal);
     if (outputFile == 0) {
         return EACCES;
     }
-    inputFile = freopen(NULL, "rb", stdin);
-    sizeOfInput = fread(buffer, 1, sizeof buffer, inputFile);
+    FILE * inputFile = freopen(NULL, "rb", stdin);
+    size_t currentBufferSize = STARTBUFFERSIZE;
+    char *buffer = (char *) malloc(currentBufferSize);
+    size_t sizeOfInput;
+    sizeOfInput = fread(buffer, currentBufferSize, 1, inputFile);
     while (sizeOfInput != 0) {
-        fwrite(buffer, 1, sizeOfInput, outputFile);
-        sizeOfInput = fread(buffer, 1, sizeof buffer, inputFile);
+        fwrite(buffer, currentBufferSize, 1, outputFile);
+        sizeOfInput = fread(buffer, currentBufferSize, 1, inputFile);
     }
     fclose(outputFile);
     return 0;
