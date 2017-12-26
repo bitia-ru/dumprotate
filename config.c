@@ -13,7 +13,7 @@ int load_config(Dumprotate* drd, const char* configPath) {
     int res;
 
     if (access(configPath, F_OK) == -1) {
-        return ENOENT;
+        return 0;
     }
     if (access(configPath, R_OK) == -1) {
         return EACCES;
