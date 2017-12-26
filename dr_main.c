@@ -17,9 +17,17 @@ typedef struct FileData {
     char * fileName;
 } FileData;
 
+typedef struct FileSize {
+    time_t createFileTime;
+    off_t fileSize;
+    char * fileName;
+} FileSize;
+
 FileData * get_list_of_dump_files(const char* dumpDir, int maxCount, int * currentNumOfDumps);
 FileData * find_latest(FileData * fDataOld, int length);
 void free_fdata(FileData * fData, int length);
+FileSize * get_list_of_dump_files_sizes(const char* dumpDir, int maxCount, int * currentNumOfDumps);
+FileSize * find_oldest(FileSize * fSize, int length);
 
 int dr_main(Dumprotate* drd) {
     const char* dumpDir = opt_dump_dir(drd);
@@ -68,6 +76,51 @@ int dr_main(Dumprotate* drd) {
         }
         free_fdata(fData, currentNumOfDumps);
     }
+    off_t maxSize = opt_max_size(drd);
+    off_t inputSize = 0;
+    char *inputData;
+    if (maxSize != 0) {
+        int currentNumOfDumps = 0;
+        FileSize *fSize = get_list_of_dump_files_sizes(dumpDir, maxCount, &currentNumOfDumps);
+        
+        FILE * inputFile = freopen(NULL, "rb", stdin);
+        char buffer[START_BUFFER_SIZE];
+        ssize_t readedBytes;
+        readedBytes = read(STDIN_FILENO, buffer, START_BUFFER_SIZE);
+        off_t currentInputBufferSize = START_BUFFER_SIZE;
+        inputData = (char *) malloc(currentInputBufferSize);
+        strcpy(inputData, "");
+        while (readedBytes != 0) {
+            strcat(inputData, buffer);
+            inputSize += readedBytes;
+            readedBytes = read(STDIN_FILENO, buffer, START_BUFFER_SIZE);
+            if (inputSize + START_BUFFER_SIZE > currentInputBufferSize) {
+                currentInputBufferSize = currentInputBufferSize << 1;
+                inputData = (char *) realloc(inputData, currentInputBufferSize);
+            }
+        }
+        
+        off_t sumFileSize=inputSize;
+        printf("%ld\n", inputSize);
+        for (int i = 0; i < currentNumOfDumps; i++) {
+            printf("%s\t%ld\n", fSize[i].fileName, fSize[i].fileSize);
+            sumFileSize += fSize[i].fileSize;
+        }
+        printf("time %ld\n",time(NULL));
+        while (sumFileSize>maxSize){
+            FileSize *currentOldest;
+            currentOldest = find_oldest(fSize, currentNumOfDumps);
+            size_t currentPathLength = snprintf(NULL, 0, "%s/%s", dumpDir, currentOldest->fileName);
+            char *fileFullPath = (char *) malloc(currentPathLength);
+            sprintf(fileFullPath, "%s/%s", dumpDir, currentOldest->fileName);
+            int res = remove(fileFullPath);
+            free(fileFullPath);
+            currentOldest->createFileTime = time(NULL);
+            sumFileSize -= currentOldest->fileSize;
+        }
+        free(fSize);
+        
+    }
 
     time_t rawtime;
     time(&rawtime);
@@ -102,13 +155,18 @@ int dr_main(Dumprotate* drd) {
     if (outputFile == NULL) {
         return EACCES;
     }
-    FILE * inputFile = freopen(NULL, "rb", stdin);
-    char buffer[START_BUFFER_SIZE];
-    ssize_t readedBytes;
-    readedBytes = read(STDIN_FILENO, buffer, START_BUFFER_SIZE);
-    while (readedBytes != 0) {
-        fwrite(buffer, readedBytes, 1, outputFile);
+    if (maxSize != 0) {
+        fwrite(inputData, inputSize, 1, outputFile);
+        free(inputData);
+    } else {
+        FILE * inputFile = freopen(NULL, "rb", stdin);
+        char buffer[START_BUFFER_SIZE];
+        ssize_t readedBytes;
         readedBytes = read(STDIN_FILENO, buffer, START_BUFFER_SIZE);
+        while (readedBytes != 0) {
+            fwrite(buffer, readedBytes, 1, outputFile);
+            readedBytes = read(STDIN_FILENO, buffer, START_BUFFER_SIZE);
+        }
     }
     fclose(outputFile);
     return 0;
@@ -159,4 +217,45 @@ void free_fdata(FileData * fData, int length) {
         free(fData[i].fileName);
     }
     free(fData);
+}
+
+FileSize * get_list_of_dump_files_sizes(const char* dumpDir, int maxCount, int * currentNumOfDumps) {
+    DIR *dir;
+    dir = opendir(dumpDir);
+    struct dirent *ent;
+    struct stat sb;
+    int currentFDataSize = maxCount;
+    FileSize *fSize = (FileSize *) malloc(currentFDataSize * sizeof (struct FileSize));
+    while ((ent = readdir(dir)) != NULL) {
+        if ((strcmp(ent->d_name, ".") == 0) || (strcmp(ent->d_name, "..") == 0)) {
+            continue;
+        }
+        if (currentFDataSize <= *currentNumOfDumps) {
+            currentFDataSize = currentFDataSize << 1;
+            fSize = (FileSize *) realloc(fSize, currentFDataSize * sizeof (struct FileSize));
+        }
+        size_t currentPathLength = snprintf(NULL, 0, "%s/%s", dumpDir, ent->d_name);
+        char *fileFullPath = (char *) malloc(currentPathLength);
+        sprintf(fileFullPath, "%s/%s", dumpDir, ent->d_name);
+        stat(fileFullPath, &sb);
+        free(fileFullPath);
+        fSize[*currentNumOfDumps].createFileTime = sb.st_ctime;
+        fSize[*currentNumOfDumps].fileSize = sb.st_size;
+        fSize[*currentNumOfDumps].fileName = ent->d_name;
+        printf("%s\n",fSize[*currentNumOfDumps].fileName);
+        (*currentNumOfDumps)++;
+    }
+    closedir(dir);
+    return fSize;
+}
+
+FileSize * find_oldest(FileSize * fSize, int length) {
+    FileSize * currentOldest;
+    currentOldest = &(fSize[0]);
+    for (int i = 0; i < length; i++) {
+        if (currentOldest->createFileTime > fSize[i].createFileTime) {
+            currentOldest = &(fSize[i]);
+        }
+    }
+    return currentOldest;
 }
