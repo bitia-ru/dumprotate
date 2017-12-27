@@ -13,6 +13,7 @@ int dr_help() {
     puts("\t\t\t\tSIZE — number of bytes (kKmMgG supported)");
     puts("\t-c PATH\t\tconfig file path");
     puts("\t-d DIR\t\tdump directory path");
+    puts("\t-f FORMAT\tformat of dump file name");
     puts("");
     return 0;
 }
