@@ -9,6 +9,7 @@
 #include <dirent.h> // opendir
 #include <sys/statvfs.h> // statvfs
 #include <stddef.h> // NULL
+#include <regex.h>
 
 #include "dumprotate.h"
 
@@ -29,6 +30,7 @@ char * load_input(off_t * inputSize);
 void remove_file(const char* dumpDir, char * fileName);
 FileData * find_oldest(FileData * fData, int length);
 char *replace_str(char *str, char *originStr, char *replaceStr);
+int get_num_by_pattern(char *nameFormat, char *fileName);
 
 int dr_main(Dumprotate* drd) {
     const char* dumpDir = opt_dump_dir(drd);
@@ -155,22 +157,41 @@ int dr_main(Dumprotate* drd) {
     char *fileFullPath = (char *) malloc(currentPathLength + 1);
     sprintf(fileFullPath, "%s/%s", dumpDir, fileNameFinal);
     free(fileNameFinal);
-    int i = 1;
-    while (access(fileFullPath, F_OK) != -1) {
-        int iToASize = snprintf(NULL, 0, "%d", i);
-        char * iToA = (char *) malloc(iToASize + 1);
-        sprintf(iToA, "%d", i);
+    int i = -1;
+    if (access(fileFullPath, F_OK) != -1) {
+        i = 0;
+    }
+    int currentNumOfDumps = 0;
+    FileData *fData = get_list_of_dump_files(dumpDir, maxCount, &currentNumOfDumps);
+
+    int numFileLast = 0;
+    for (int l; l < currentNumOfDumps; l++) {
+        printf("%s\n",fData[l].fileName);
+        int num = get_num_by_pattern(nameFormat, fData[l].fileName);
+        printf("%s\t%d\n", fData[l].fileName, num);
+        if (num > numFileLast) {
+            numFileLast = num;
+        }
+    }
+    free(fData);
+    printf("next number %d\n", numFileLast + 1);
+
+    if (numFileLast == -1) {
+        fileNameFinal = replace_str(fileName, "%i", "");
+    } else {
+        int iToASize = snprintf(NULL, 0, "%d", numFileLast + 1);
+        char * iToA = (char *) malloc(iToASize);
+        sprintf(iToA, "%d", numFileLast + 1);
         fileNameFinal = replace_str(fileName, "%i", iToA);
         free(iToA);
-        currentPathLength = snprintf(NULL, 0, "%s/%s", dumpDir, fileNameFinal);
-        if (currentPathLength > strlen(fileFullPath)) {
-            fileFullPath = (char *) realloc(fileFullPath, currentPathLength + 1);
-        }
-        sprintf(fileFullPath, "%s/%s", dumpDir, fileNameFinal);
-        free(fileNameFinal);
-        i++;
     }
 
+    currentPathLength = snprintf(NULL, 0, "%s/%s", dumpDir, fileNameFinal);
+    if (currentPathLength > strlen(fileFullPath)) {
+        fileFullPath = (char *) realloc(fileFullPath, currentPathLength);
+    }
+    sprintf(fileFullPath, "%s/%s", dumpDir, fileNameFinal);
+    free(fileNameFinal);
     free(fileName);
     FILE * outputFile = fopen(fileFullPath, "wb");
     if (outputFile == NULL) {
@@ -297,4 +318,36 @@ char *replace_str(char *str, char *originStr, char *replaceStr) {
 
     sprintf(buffer + (p - str), "%s%s", replaceStr, p + strlen(originStr));
     return buffer;
+}
+
+int get_num_by_pattern(char *nameFormat, char *fileName) {
+    char * regexString = replace_str(nameFormat, "%i", "([0-9]+)");
+    size_t maxGroups = 2;
+
+    regex_t regexCompiled;
+    regmatch_t groupArray[2];
+    if (regcomp(&regexCompiled, regexString, REG_EXTENDED)) {
+        free(regexString);
+        return -1;
+    }
+    free(regexString);
+    if (regexec(&regexCompiled, fileName, maxGroups, groupArray, 0) == 0) {
+        if (groupArray[1].rm_so == (size_t) - 1) {
+            regfree(&regexCompiled);
+            return -1;
+        }
+        char *fileNameCopy = (char *) malloc(strlen(fileName) + 1);
+        strcpy(fileNameCopy, fileName);
+        fileNameCopy[groupArray[1].rm_eo] = 0;
+        printf("%s\n", fileNameCopy + groupArray[1].rm_so);
+        int num;
+        sscanf(fileNameCopy + groupArray[1].rm_so,"%d",&num);
+        free(fileNameCopy);
+        regfree(&regexCompiled);
+        return num;
+    }
+
+    regfree(&regexCompiled);
+
+    return -1;
 }
