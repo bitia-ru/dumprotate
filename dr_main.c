@@ -19,6 +19,7 @@ typedef struct FileData {
 
 FileData * get_list_of_dump_files(const char* dumpDir, int maxCount, int * currentNumOfDumps);
 FileData * find_latest(FileData * fDataOld, int length);
+void free_fdata(FileData * fData, int length);
 
 int dr_main(Dumprotate* drd) {
     const char* dumpDir = opt_dump_dir(drd);
@@ -35,11 +36,15 @@ int dr_main(Dumprotate* drd) {
         int numOfFilesToDel = currentNumOfDumps + 1 - maxCount;
         if (numOfFilesToDel > 0) {
             FileData *fDataOld = (FileData *) malloc(numOfFilesToDel * sizeof (struct FileData));
+            for (int i = 0; i < numOfFilesToDel; i++) {
+                fDataOld[i].fileName = (char *) malloc(strlen(fData[0].fileName));
+            }
             FileData *currentLatest;
             currentLatest = &(fDataOld[0]);
             for (int i = 0; i < numOfFilesToDel; i++) {
                 fDataOld[i].createFileTime = fData[i].createFileTime;
-                fDataOld[i].fileName = fData[i].fileName;
+                fDataOld[i].fileName = (char *) realloc(fDataOld[i].fileName, strlen(fData[i].fileName) + 1);
+                strcpy(fDataOld[i].fileName, fData[i].fileName);
                 if (currentLatest->createFileTime < fDataOld[i].createFileTime) {
                     currentLatest = &(fDataOld[i]);
                 }
@@ -47,7 +52,8 @@ int dr_main(Dumprotate* drd) {
             for (int i = numOfFilesToDel; i < currentNumOfDumps; i++) {
                 if (currentLatest->createFileTime > fData[i].createFileTime) {
                     currentLatest->createFileTime = fData[i].createFileTime;
-                    currentLatest->fileName = fData[i].fileName;
+                    currentLatest->fileName = (char *) realloc(currentLatest->fileName, strlen(fData[i].fileName) + 1);
+                    strcpy(currentLatest->fileName, fData[i].fileName);
                     currentLatest = find_latest(fDataOld, numOfFilesToDel);
                 }
             }
@@ -58,9 +64,9 @@ int dr_main(Dumprotate* drd) {
                 int res = remove(fileFullPath);
                 free(fileFullPath);
             }
-            free(fDataOld);
+            free_fdata(fDataOld, numOfFilesToDel);
         }
-        free(fData);
+        free_fdata(fData, currentNumOfDumps);
     }
 
     time_t rawtime;
@@ -129,7 +135,8 @@ FileData * get_list_of_dump_files(const char* dumpDir, int maxCount, int * curre
         stat(fileFullPath, &sb);
         free(fileFullPath);
         fData[*currentNumOfDumps].createFileTime = sb.st_ctime;
-        fData[*currentNumOfDumps].fileName = ent->d_name;
+        fData[*currentNumOfDumps].fileName = (char *) malloc(strlen(ent->d_name) + 1);
+        strcpy(fData[*currentNumOfDumps].fileName, ent->d_name);
         (*currentNumOfDumps)++;
     }
     closedir(dir);
@@ -145,4 +152,11 @@ FileData * find_latest(FileData * fDataOld, int length) {
         }
     }
     return currentLatest;
+}
+
+void free_fdata(FileData * fData, int length) {
+    for (int i = 0; i < length; i++) {
+        free(fData[i].fileName);
+    }
+    free(fData);
 }
