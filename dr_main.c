@@ -92,19 +92,19 @@ int dr_main(Dumprotate* drd) {
     char * fileNameFinal;
     fileNameFinal = replace_str(fileName, "%i", "");
     currentPathLength = snprintf(NULL, 0, "%s/%s", dumpDir, fileNameFinal);
-    char *fileFullPath = (char *) malloc(currentPathLength);
+    char *fileFullPath = (char *) malloc(currentPathLength + 1);
     sprintf(fileFullPath, "%s/%s", dumpDir, fileNameFinal);
     free(fileNameFinal);
     int i = 1;
     while (access(fileFullPath, F_OK) != -1) {
         int iToASize = snprintf(NULL, 0, "%d", i);
-        char * iToA = (char *) malloc(iToASize);
+        char * iToA = (char *) malloc(iToASize + 1);
         sprintf(iToA, "%d", i);
         fileNameFinal = replace_str(fileName, "%i", iToA);
         free(iToA);
         currentPathLength = snprintf(NULL, 0, "%s/%s", dumpDir, fileNameFinal);
         if (currentPathLength > strlen(fileFullPath)) {
-            fileFullPath = (char *) realloc(fileFullPath, currentPathLength);
+            fileFullPath = (char *) realloc(fileFullPath, currentPathLength + 1);
         }
         sprintf(fileFullPath, "%s/%s", dumpDir, fileNameFinal);
         free(fileNameFinal);
