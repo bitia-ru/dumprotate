@@ -110,14 +110,19 @@ int dr_main(Dumprotate* drd) {
         if (inputSize > currentAvailable - minEmptySpace) {
             int currentNumOfDumps = 0;
             FileData *fData = get_list_of_dump_files(dumpDir, maxCount, &currentNumOfDumps);
-            while (minEmptySpace > currentAvailable - inputSize) {
+            int i = currentNumOfDumps;
+            while ((i > 0) && (minEmptySpace > currentAvailable - inputSize)) {
                 FileData *currentOldest;
                 currentOldest = find_oldest(fData, currentNumOfDumps);
                 remove_file(dumpDir, currentOldest->fileName);
                 currentOldest->createFileTime = time(NULL);
                 currentAvailable += currentOldest->fileSize;
+                i--;
             }
-            free(fData);
+            free_fdata(fData, currentNumOfDumps);
+            if (minEmptySpace > currentAvailable - inputSize) {
+                return ENOMEM;
+            }
         }
     }
     time_t rawtime;
@@ -256,7 +261,7 @@ char * load_input(off_t * inputSize) {
 
 void remove_file(const char* dumpDir, char * fileName) {
     size_t currentPathLength = snprintf(NULL, 0, "%s/%s", dumpDir, fileName);
-    char *fileFullPath = (char *) malloc(currentPathLength);
+    char *fileFullPath = (char *) malloc(currentPathLength + 1);
     sprintf(fileFullPath, "%s/%s", dumpDir, fileName);
     int res = remove(fileFullPath);
     free(fileFullPath);
