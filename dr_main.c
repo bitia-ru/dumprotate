@@ -11,6 +11,7 @@
 
 #define START_PATH_LENGTH (64U)
 #define START_BUFFER_SIZE (4096U)
+#define START_NUM_OF_FILES (32U)
 
 typedef struct FileData {
     time_t createFileTime;
@@ -77,7 +78,6 @@ int dr_main(Dumprotate* drd) {
         int currentNumOfDumps = 0;
         FileData *fData = get_list_of_dump_files(dumpDir, maxCount, &currentNumOfDumps);
         
-        
         FILE * inputFile = freopen(NULL, "rb", stdin);
         char buffer[START_BUFFER_SIZE];
         ssize_t readedBytes;
@@ -101,7 +101,8 @@ int dr_main(Dumprotate* drd) {
         for (int i = 0; i < currentNumOfDumps; i++) {
             sumFileSize += fData[i].fileSize;
         }
-        while (sumFileSize>maxSize){
+        int i = currentNumOfDumps;
+        while ((i > 0) && (sumFileSize>maxSize)){
             FileData *currentOldest;
             currentOldest = find_oldest(fData, currentNumOfDumps);
             size_t currentPathLength = snprintf(NULL, 0, "%s/%s", dumpDir, currentOldest->fileName);
@@ -111,11 +112,13 @@ int dr_main(Dumprotate* drd) {
             free(fileFullPath);
             currentOldest->createFileTime = time(NULL);
             sumFileSize -= currentOldest->fileSize;
+            i--;
         }
         free(fData);
-        
+        if (sumFileSize > maxSize) {
+            return ENOMEM;
+        }
     }
-
     time_t rawtime;
     time(&rawtime);
     struct tm *currentDateTime;
@@ -171,7 +174,12 @@ FileData * get_list_of_dump_files(const char* dumpDir, int maxCount, int * curre
     dir = opendir(dumpDir);
     struct dirent *ent;
     struct stat sb;
-    int currentFDataSize = maxCount;
+    int currentFDataSize;
+    if (maxCount == 0) {
+        currentFDataSize = START_NUM_OF_FILES;
+    } else {
+        currentFDataSize = maxCount;
+    }
     FileData *fData = (FileData *) malloc(currentFDataSize * sizeof (struct FileData));
     while ((ent = readdir(dir)) != NULL) {
         if ((strcmp(ent->d_name, ".") == 0) || (strcmp(ent->d_name, "..") == 0)) {
