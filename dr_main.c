@@ -76,16 +76,18 @@ int dr_main(Dumprotate* drd) {
     currentDateTime = localtime(&rawtime);
     size_t currentPathLength = START_PATH_LENGTH;
     char *fileName = (char *) malloc(currentPathLength);
-    char* nameFormat = (char *) opt_name_format(drd);
-    strcat(nameFormat, ".dump");
-    if (strstr(nameFormat, "%i") == NULL) {
-        strcat(nameFormat, "%i");
+    const char* nameFormat = opt_name_format(drd);
+    char* nameFormatCurrent = (char *) malloc(strlen(nameFormat) + strlen(".dump") + strlen("%i") + 1);
+    strcpy(nameFormatCurrent, nameFormat);
+    strcat(nameFormatCurrent, ".dump");
+    if (strstr(nameFormatCurrent, "%i") == NULL) {
+        strcat(nameFormatCurrent, "%i");
     }
-    size_t res = strftime(fileName, currentPathLength, nameFormat, currentDateTime);
+    size_t res = strftime(fileName, currentPathLength, nameFormatCurrent, currentDateTime);
     while (res == 0) {
         currentPathLength = currentPathLength << 1;
         fileName = (char *) realloc(fileName, currentPathLength);
-        res = strftime(fileName, currentPathLength, nameFormat, currentDateTime);
+        res = strftime(fileName, currentPathLength, nameFormatCurrent, currentDateTime);
     }
     char * fileNameFinal;
     fileNameFinal = replace_str(fileName, "%i", "");
