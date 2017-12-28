@@ -59,7 +59,7 @@ int dr_main(Dumprotate* drd) {
             }
             for (int i = 0; i < numOfFilesToDel; i++) {
                 size_t currentPathLength = snprintf(NULL, 0, "%s/%s", dumpDir, fDataOld[i].fileName);
-                char *fileFullPath = (char *) malloc(currentPathLength);
+                char *fileFullPath = (char *) malloc(currentPathLength + 1);
                 sprintf(fileFullPath, "%s/%s", dumpDir, fDataOld[i].fileName);
                 int res = remove(fileFullPath);
                 free(fileFullPath);
@@ -82,7 +82,7 @@ int dr_main(Dumprotate* drd) {
         res = strftime(fileName, currentPathLength, "%c.dump", currentDateTime);
     }
     currentPathLength = snprintf(NULL, 0, "%s/%s", dumpDir, fileName);
-    char *fileFullPathBase = (char *) malloc(currentPathLength);
+    char *fileFullPathBase = (char *) malloc(currentPathLength + 1);
     sprintf(fileFullPathBase, "%s/%s", dumpDir, fileName);
     free(fileName);
     char *fileFullPathFinal = (char *) malloc(currentPathLength);
@@ -91,7 +91,7 @@ int dr_main(Dumprotate* drd) {
     while (access(fileFullPathFinal, F_OK) != -1) {
         currentPathLength = snprintf(NULL, 0, "%s.%d", fileFullPathBase, i);
         if (currentPathLength > strlen(fileFullPathFinal)) {
-            fileFullPathFinal = (char *) realloc(fileFullPathFinal, currentPathLength);
+            fileFullPathFinal = (char *) realloc(fileFullPathFinal, currentPathLength + 1);
         }
         sprintf(fileFullPathFinal, "%s.%d", fileFullPathBase, i);
         i++;
@@ -130,7 +130,7 @@ FileData * get_list_of_dump_files(const char* dumpDir, int maxCount, int * curre
             fData = (FileData *) realloc(fData, currentFDataSize * sizeof (struct FileData));
         }
         size_t currentPathLength = snprintf(NULL, 0, "%s/%s", dumpDir, ent->d_name);
-        char *fileFullPath = (char *) malloc(currentPathLength);
+        char *fileFullPath = (char *) malloc(currentPathLength + 1);
         sprintf(fileFullPath, "%s/%s", dumpDir, ent->d_name);
         stat(fileFullPath, &sb);
         free(fileFullPath);
