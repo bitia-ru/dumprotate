@@ -34,7 +34,7 @@ int dr_main(Dumprotate* drd) {
 
     struct stat st = {0};
     if (stat(dumpDir, &st) == -1) {
-        error(0, ENOENT, "%s", dumpDir);
+        error(0, ENOENT, "Couldn't find dump dir %s", dumpDir);
         return ENOENT;
     }
 
@@ -97,7 +97,7 @@ int dr_main(Dumprotate* drd) {
         }
         free_fdata(fData, currentNumOfDumps);
         if (sumFileSize > maxSize) {
-            error(0, ENOMEM, "%s", dumpDir);
+            error(0, ENOMEM, "Maximum storage size is less then dump file size");
             return ENOMEM;
         }
     }
@@ -124,6 +124,7 @@ int dr_main(Dumprotate* drd) {
             }
             free_fdata(fData, currentNumOfDumps);
             if (minEmptySpace > currentAvailable - inputSize) {
+                error(0, ENOMEM, "Not enough space in %s", dumpDir);
                 return ENOMEM;
             }
         }
@@ -158,7 +159,7 @@ int dr_main(Dumprotate* drd) {
     free(fileFullPathBase);
     FILE * outputFile = fopen(fileFullPathFinal, "wb");
     if (outputFile == NULL) {
-        error(0, EACCES, "%s", fileFullPathFinal);
+        error(0, EACCES, "Couldn't open output file %s", fileFullPathFinal);
         return EACCES;
     }
     free(fileFullPathFinal);

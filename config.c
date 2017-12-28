@@ -17,7 +17,7 @@ int load_config(Dumprotate* drd, const char* configPath) {
         return 0;
     }
     if (access(configPath, R_OK) == -1) {
-        error(0, EACCES, "%s", configPath);
+        error(0, EACCES, "Couldn't open config file %s", configPath);
         return EACCES;
     }
     ini = iniparser_load(configPath);

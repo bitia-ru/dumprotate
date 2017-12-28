@@ -33,6 +33,6 @@ int ssize2bytes(const char* str, off_t* numOfBytes) {
                     return 0;
             }
     }
-    error(0, EINVAL, "%s", str);
+    error(0, EINVAL, "Wrong value %s", str);
     return EINVAL;
 }
