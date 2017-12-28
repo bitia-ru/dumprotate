@@ -4,6 +4,7 @@
 #include <unistd.h> // access, read, STDIN_FILENO
 #include <sys/stat.h> // stat
 #include <errno.h> // ENOENT, EACCES
+#include <error.h> // error
 #include <stdlib.h> // malloc, realloc, free
 #include <dirent.h> // opendir
 #include <sys/statvfs.h> // statvfs
@@ -33,6 +34,7 @@ int dr_main(Dumprotate* drd) {
 
     struct stat st = {0};
     if (stat(dumpDir, &st) == -1) {
+        error(0, ENOENT, "%s", dumpDir);
         return ENOENT;
     }
 
@@ -95,6 +97,7 @@ int dr_main(Dumprotate* drd) {
         }
         free_fdata(fData, currentNumOfDumps);
         if (sumFileSize > maxSize) {
+            error(0, ENOMEM, "%s", dumpDir);
             return ENOMEM;
         }
     }
@@ -154,10 +157,11 @@ int dr_main(Dumprotate* drd) {
     }
     free(fileFullPathBase);
     FILE * outputFile = fopen(fileFullPathFinal, "wb");
-    free(fileFullPathFinal);
     if (outputFile == NULL) {
+        error(0, EACCES, "%s", fileFullPathFinal);
         return EACCES;
     }
+    free(fileFullPathFinal);
     if (inputData != NULL) {
         fwrite(inputData, inputSize, 1, outputFile);
         free(inputData);
