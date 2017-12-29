@@ -35,6 +35,8 @@ int load_config(Dumprotate* drd, const char* configPath) {
     drd->configFile.minEmptySpace = numOfBytes;
     str = iniparser_getstring(ini, "main:dumpDir", NULL);
     drd->configFile.dumpDir = str;
+    str = iniparser_getstring(ini, "main:nameFormat", NULL);
+    drd->configFile.nameFormat = str;
 
     return 0;
 }
