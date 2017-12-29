@@ -75,7 +75,7 @@ int dr_main(Dumprotate* drd) {
     struct tm *currentDateTime;
     currentDateTime = localtime(&rawtime);
     size_t currentPathLength = START_PATH_LENGTH;
-    char *fileName = (char *) malloc(currentPathLength);
+    char *fileName = (char *) malloc(currentPathLength+1);
     const char* nameFormat = opt_name_format(drd);
     char* nameFormatCurrent = (char *) malloc(strlen(nameFormat) + strlen(".dump") + strlen("%i") + 1);
     strcpy(nameFormatCurrent, nameFormat);
