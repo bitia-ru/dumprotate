@@ -157,30 +157,26 @@ int dr_main(Dumprotate* drd) {
     char *fileFullPath = (char *) malloc(currentPathLength + 1);
     sprintf(fileFullPath, "%s/%s", dumpDir, fileNameFinal);
     free(fileNameFinal);
-    int i = -1;
+    int numFileLast = -1;
     if (access(fileFullPath, F_OK) != -1) {
-        i = 0;
+        numFileLast = 0;
     }
     int currentNumOfDumps = 0;
     FileData *fData = get_list_of_dump_files(dumpDir, maxCount, &currentNumOfDumps);
 
-    int numFileLast = 0;
-    for (int l; l < currentNumOfDumps; l++) {
-        printf("%s\n",fData[l].fileName);
-        int num = get_num_by_pattern(nameFormat, fData[l].fileName);
-        printf("%s\t%d\n", fData[l].fileName, num);
+    for (int i; i < currentNumOfDumps; i++) {
+        int num = get_num_by_pattern(fileName, fData[i].fileName);
         if (num > numFileLast) {
             numFileLast = num;
         }
     }
-    free(fData);
-    printf("next number %d\n", numFileLast + 1);
-
+    free_fdata(fData, currentNumOfDumps);
+    
     if (numFileLast == -1) {
         fileNameFinal = replace_str(fileName, "%i", "");
     } else {
         int iToASize = snprintf(NULL, 0, "%d", numFileLast + 1);
-        char * iToA = (char *) malloc(iToASize);
+        char * iToA = (char *) malloc(iToASize +1);
         sprintf(iToA, "%d", numFileLast + 1);
         fileNameFinal = replace_str(fileName, "%i", iToA);
         free(iToA);
@@ -188,7 +184,7 @@ int dr_main(Dumprotate* drd) {
 
     currentPathLength = snprintf(NULL, 0, "%s/%s", dumpDir, fileNameFinal);
     if (currentPathLength > strlen(fileFullPath)) {
-        fileFullPath = (char *) realloc(fileFullPath, currentPathLength);
+        fileFullPath = (char *) realloc(fileFullPath, currentPathLength + 1);
     }
     sprintf(fileFullPath, "%s/%s", dumpDir, fileNameFinal);
     free(fileNameFinal);
@@ -339,7 +335,6 @@ int get_num_by_pattern(char *nameFormat, char *fileName) {
         char *fileNameCopy = (char *) malloc(strlen(fileName) + 1);
         strcpy(fileNameCopy, fileName);
         fileNameCopy[groupArray[1].rm_eo] = 0;
-        printf("%s\n", fileNameCopy + groupArray[1].rm_so);
         int num;
         sscanf(fileNameCopy + groupArray[1].rm_so,"%d",&num);
         free(fileNameCopy);

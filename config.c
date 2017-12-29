@@ -27,18 +27,16 @@ int load_config(Dumprotate* drd, const char* configPath) {
         return res;
     }
     drd->configFile.maxSize = numOfBytes;
-    res = iniparser_getint(ini, "main:maxCount", 0);
-    drd->configFile.maxCount = res;
+    drd->configFile.maxCount = iniparser_getint(ini, "main:maxCount", 0);
     str = iniparser_getstring(ini, "main:minEmptySpace", "0");
     res = ssize2bytes(str, &numOfBytes);
     if (res != 0) {
         return res;
     }
     drd->configFile.minEmptySpace = numOfBytes;
-    str = iniparser_getstring(ini, "main:dumpDir", NULL);
-    drd->configFile.dumpDir = str;
-    str = iniparser_getstring(ini, "main:nameFormat", NULL);
-    drd->configFile.nameFormat = str;
+    drd->configFile.dumpDir = iniparser_getstring(ini, "main:dumpDir", NULL);
+    drd->configFile.nameFormat = iniparser_getstring(ini, "main:nameFormat", NULL);
+    drd->configFile.woTimestamps = iniparser_getboolean(ini, "main:woTimestamps", 0);
 
     return 0;
 }

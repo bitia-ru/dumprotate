@@ -17,6 +17,7 @@ typedef struct Dumprotate {
         const char* configPath;
         const char* dumpDir;
         const char* nameFormat;
+        bool woTimestamps;
         DumprotateAction action;
     } args;
 
@@ -26,6 +27,7 @@ typedef struct Dumprotate {
         off_t minEmptySpace;
         const char* dumpDir;
         const char* nameFormat;
+        bool woTimestamps;
     } configFile;
 } Dumprotate;
 
