@@ -4,6 +4,7 @@
 #include <unistd.h> // access, read, STDIN_FILENO
 #include <sys/stat.h> // stat
 #include <errno.h> // ENOENT, EACCES
+#include <error.h> // error
 #include <stdlib.h> // malloc, realloc, free
 #include <dirent.h> // opendir
 #include <sys/statvfs.h> // statvfs
@@ -24,15 +25,16 @@ typedef struct FileData {
 FileData * get_list_of_dump_files(const char* dumpDir, int maxCount, int * currentNumOfDumps);
 FileData * find_latest(FileData * fDataOld, int length);
 void free_fdata(FileData * fData, int length);
-FileData * find_oldest(FileData * fData, int length);
 char * load_input(off_t * inputSize);
 void remove_file(const char* dumpDir, char * fileName);
+FileData * find_oldest(FileData * fData, int length);
 
 int dr_main(Dumprotate* drd) {
     const char* dumpDir = opt_dump_dir(drd);
 
     struct stat st = {0};
     if (stat(dumpDir, &st) == -1) {
+        error(0, ENOENT, "Couldn't find dump dir %s", dumpDir);
         return ENOENT;
     }
 
@@ -95,6 +97,7 @@ int dr_main(Dumprotate* drd) {
         }
         free_fdata(fData, currentNumOfDumps);
         if (sumFileSize > maxSize) {
+            error(0, ENOMEM, "Maximum storage size is less then dump file size");
             return ENOMEM;
         }
     }
@@ -121,6 +124,7 @@ int dr_main(Dumprotate* drd) {
             }
             free_fdata(fData, currentNumOfDumps);
             if (minEmptySpace > currentAvailable - inputSize) {
+                error(0, ENOMEM, "Not enough space in %s", dumpDir);
                 return ENOMEM;
             }
         }
@@ -154,10 +158,11 @@ int dr_main(Dumprotate* drd) {
     }
     free(fileFullPathBase);
     FILE * outputFile = fopen(fileFullPathFinal, "wb");
-    free(fileFullPathFinal);
     if (outputFile == NULL) {
+        error(0, EACCES, "Couldn't open output file %s", fileFullPathFinal);
         return EACCES;
     }
+    free(fileFullPathFinal);
     if (inputData != NULL) {
         fwrite(inputData, inputSize, 1, outputFile);
         free(inputData);
@@ -227,17 +232,6 @@ void free_fdata(FileData * fData, int length) {
     free(fData);
 }
 
-FileData * find_oldest(FileData * fData, int length) {
-    FileData * currentOldest;
-    currentOldest = &(fData[0]);
-    for (int i = 0; i < length; i++) {
-        if (currentOldest->createFileTime > fData[i].createFileTime) {
-            currentOldest = &(fData[i]);
-        }
-    }
-    return currentOldest;
-}
-
 char * load_input(off_t * inputSize) {
     char buffer[START_BUFFER_SIZE];
     ssize_t readedBytes;
@@ -265,4 +259,15 @@ void remove_file(const char* dumpDir, char * fileName) {
     sprintf(fileFullPath, "%s/%s", dumpDir, fileName);
     int res = remove(fileFullPath);
     free(fileFullPath);
+}
+
+FileData * find_oldest(FileData * fData, int length) {
+    FileData * currentOldest;
+    currentOldest = &(fData[0]);
+    for (int i = 0; i < length; i++) {
+        if (currentOldest->createFileTime > fData[i].createFileTime) {
+            currentOldest = &(fData[i]);
+        }
+    }
+    return currentOldest;
 }
