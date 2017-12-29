@@ -16,6 +16,7 @@ typedef struct Dumprotate {
         off_t minEmptySpace;
         const char* configPath;
         const char* dumpDir;
+        const char* nameFormat;
         DumprotateAction action;
     } args;
 
@@ -24,6 +25,7 @@ typedef struct Dumprotate {
         int maxCount;
         off_t minEmptySpace;
         const char* dumpDir;
+        const char* nameFormat;
     } configFile;
 } Dumprotate;
 
@@ -40,6 +42,7 @@ off_t opt_max_size(Dumprotate* drd);
 int opt_max_count(Dumprotate* drd);
 off_t opt_min_empty_space(Dumprotate* drd);
 const char* opt_dump_dir(Dumprotate* drd);
+const char* opt_name_format(Dumprotate* drd);
 DumprotateAction opt_action(Dumprotate* drd);
 const char* opt_config_path(Dumprotate* drd);
 /* --------------- */

@@ -21,6 +21,10 @@ const char* opt_dump_dir(Dumprotate* drd) {
     return OPT_ARGS_CONFIG(drd, dumpDir, NULL);
 }
 
+const char* opt_name_format(Dumprotate* drd) {
+    return OPT_ARGS_CONFIG(drd, nameFormat, NULL);
+}
+
 DumprotateAction opt_action(Dumprotate* drd) {
     return drd->args.action;
 }

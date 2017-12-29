@@ -1,6 +1,6 @@
 #include <stdio.h> // freopen, fopen, fwrite, sprintf, snprintf
 #include <time.h> // strftime
-#include <string.h> // strcpy, strlen
+#include <string.h> // strcpy, strlen, strstr
 #include <unistd.h> // access, read, STDIN_FILENO
 #include <sys/stat.h> // stat
 #include <errno.h> // ENOENT, EACCES
@@ -28,6 +28,7 @@ void free_fdata(FileData * fData, int length);
 char * load_input(off_t * inputSize);
 void remove_file(const char* dumpDir, char * fileName);
 FileData * find_oldest(FileData * fData, int length);
+char *replace_str(char *str, char *originStr, char *replaceStr);
 
 int dr_main(Dumprotate* drd) {
     const char* dumpDir = opt_dump_dir(drd);
@@ -134,35 +135,49 @@ int dr_main(Dumprotate* drd) {
     struct tm *currentDateTime;
     currentDateTime = localtime(&rawtime);
     size_t currentPathLength = START_PATH_LENGTH;
-    char *fileName = (char *) malloc(currentPathLength);
-    size_t res = strftime(fileName, currentPathLength, "%c.dump", currentDateTime);
+    char *fileName = (char *) malloc(currentPathLength+1);
+    const char* nameFormat = opt_name_format(drd);
+    char* nameFormatCurrent = (char *) malloc(strlen(nameFormat) + strlen(".dump") + strlen("%i") + 1);
+    strcpy(nameFormatCurrent, nameFormat);
+    strcat(nameFormatCurrent, ".dump");
+    if (strstr(nameFormatCurrent, "%i") == NULL) {
+        strcat(nameFormatCurrent, "%i");
+    }
+    size_t res = strftime(fileName, currentPathLength, nameFormatCurrent, currentDateTime);
     while (res == 0) {
         currentPathLength = currentPathLength << 1;
         fileName = (char *) realloc(fileName, currentPathLength);
-        res = strftime(fileName, currentPathLength, "%c.dump", currentDateTime);
+        res = strftime(fileName, currentPathLength, nameFormatCurrent, currentDateTime);
     }
-    currentPathLength = snprintf(NULL, 0, "%s/%s", dumpDir, fileName);
-    char *fileFullPathBase = (char *) malloc(currentPathLength + 1);
-    sprintf(fileFullPathBase, "%s/%s", dumpDir, fileName);
-    free(fileName);
-    char *fileFullPathFinal = (char *) malloc(currentPathLength);
-    strcpy(fileFullPathFinal, fileFullPathBase);
+    char * fileNameFinal;
+    fileNameFinal = replace_str(fileName, "%i", "");
+    currentPathLength = snprintf(NULL, 0, "%s/%s", dumpDir, fileNameFinal);
+    char *fileFullPath = (char *) malloc(currentPathLength + 1);
+    sprintf(fileFullPath, "%s/%s", dumpDir, fileNameFinal);
+    free(fileNameFinal);
     int i = 1;
-    while (access(fileFullPathFinal, F_OK) != -1) {
-        currentPathLength = snprintf(NULL, 0, "%s.%d", fileFullPathBase, i);
-        if (currentPathLength > strlen(fileFullPathFinal)) {
-            fileFullPathFinal = (char *) realloc(fileFullPathFinal, currentPathLength + 1);
+    while (access(fileFullPath, F_OK) != -1) {
+        int iToASize = snprintf(NULL, 0, "%d", i);
+        char * iToA = (char *) malloc(iToASize + 1);
+        sprintf(iToA, "%d", i);
+        fileNameFinal = replace_str(fileName, "%i", iToA);
+        free(iToA);
+        currentPathLength = snprintf(NULL, 0, "%s/%s", dumpDir, fileNameFinal);
+        if (currentPathLength > strlen(fileFullPath)) {
+            fileFullPath = (char *) realloc(fileFullPath, currentPathLength + 1);
         }
-        sprintf(fileFullPathFinal, "%s.%d", fileFullPathBase, i);
+        sprintf(fileFullPath, "%s/%s", dumpDir, fileNameFinal);
+        free(fileNameFinal);
         i++;
     }
-    free(fileFullPathBase);
-    FILE * outputFile = fopen(fileFullPathFinal, "wb");
+
+    free(fileName);
+    FILE * outputFile = fopen(fileFullPath, "wb");
     if (outputFile == NULL) {
-        error(0, EACCES, "Couldn't open output file %s", fileFullPathFinal);
+        error(0, EACCES, "Couldn't open output file %s", fileFullPath);
         return EACCES;
     }
-    free(fileFullPathFinal);
+    free(fileFullPath);
     if (inputData != NULL) {
         fwrite(inputData, inputSize, 1, outputFile);
         free(inputData);
@@ -270,4 +285,16 @@ FileData * find_oldest(FileData * fData, int length) {
         }
     }
     return currentOldest;
+}
+
+char *replace_str(char *str, char *originStr, char *replaceStr) {
+    char *p;
+
+    p = strstr(str, originStr);
+    char *buffer = (char *) malloc(strlen(str) + strlen(replaceStr) - strlen(originStr) + 1);
+    strncpy(buffer, str, p - str);
+    buffer[p - str] = '\0';
+
+    sprintf(buffer + (p - str), "%s%s", replaceStr, p + strlen(originStr));
+    return buffer;
 }

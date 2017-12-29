@@ -29,6 +29,7 @@ int parse_args(Dumprotate* drd, int argc, char** argv) {
                 case 'e':
                 case 'c':
                 case 'd':
+                case 'f':
                     currentFlag = argv[i][1];
                     break;
                 case 'h':
@@ -69,6 +70,9 @@ int parse_args(Dumprotate* drd, int argc, char** argv) {
                 break;
             case 'd':
                 drd->args.dumpDir = argv[i];
+                break;
+            case 'f':
+                drd->args.nameFormat = argv[i];
                 break;
         }
         currentFlag = 0;
