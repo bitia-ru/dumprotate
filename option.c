@@ -22,7 +22,8 @@ const char* opt_dump_dir(Dumprotate* drd) {
 }
 
 const char* opt_name_format(Dumprotate* drd) {
-    return OPT_ARGS_CONFIG(drd, nameFormat, NULL);
+    const char* res = OPT_ARGS_CONFIG(drd, nameFormat, NULL);
+    return res != NULL ? res : "%c.dump%i";
 }
 
 DumprotateAction opt_action(Dumprotate* drd) {

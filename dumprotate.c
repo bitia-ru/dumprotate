@@ -12,8 +12,8 @@ const struct {
     DumprotateAction action;
     DumprotateActionDispatcher_f dispatcher;
 } actionDispatchers[] = {
-    { DUMPROTATE_MAIN, dr_main },
-    { DUMPROTATE_HELP, dr_help },
+    { DUMPROTATE_MAIN, dr_main},
+    { DUMPROTATE_HELP, dr_help},
 };
 
 int main(int argc, char** argv) {
@@ -29,10 +29,10 @@ int main(int argc, char** argv) {
         res = load_config(&drd, opt_config_path(&drd));
         if (res != 0)
             return res;
-        res = dr_main(&drd);
-        if (res != 0)
-            return res;
     }
-    dr_help();
+    switch (drd.args.action) {
+        case DUMPROTATE_MAIN: return dr_main(&drd);
+        default: return dr_help();
+    }
 }
 
