@@ -1,6 +1,7 @@
 #include <stdio.h> // sscanf
 #include <string.h> // strlen, strcmp
 #include <errno.h> // EINVAL
+#include <error.h> // error
 
 #include "ssize2bytes.h" // ssize2bytes
 #include "dumprotate.h"
@@ -19,6 +20,7 @@ int parse_args(Dumprotate* drd, int argc, char** argv) {
                     drd->args.action = DUMPROTATE_HELP;
                     return 0;
                 }
+                error(0, EINVAL, "Unknown option %s", argv[i]);
                 return EINVAL;
             }
             switch (argv[i][1]) {
@@ -33,6 +35,7 @@ int parse_args(Dumprotate* drd, int argc, char** argv) {
                     drd->args.action = DUMPROTATE_HELP;
                     return 0;
                 default:
+                    error(0, EINVAL, "Unknown option %s", argv[i]);
                     return EINVAL;
             }
 
@@ -49,6 +52,7 @@ int parse_args(Dumprotate* drd, int argc, char** argv) {
             case 'n':
                 res = sscanf(argv[i], "%d%c", &val, &c);
                 if (res != 1) {
+                    error(0, EINVAL, "Wrong value %s for number of dumps", argv[i]);
                     return EINVAL;
                 }
                 drd->args.maxCount = val;
