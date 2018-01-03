@@ -80,8 +80,8 @@ int parse_args(Dumprotate* drd, int argc, char** argv) {
                     drd->args.woTimestamps = false;
                     break;
                 }
-                if (((strcmp(argv[i],"0") == 0) || (strcmp(argv[i],"f") == 0)) || (strcmp(argv[i],"false") == 0)) {
-                    drd->args.woTimestamps = false;
+                if (((strcmp(argv[i],"1") == 0) || (strcmp(argv[i],"t") == 0)) || (strcmp(argv[i],"true") == 0)) {
+                    drd->args.woTimestamps = true;
                     break;
                 }
                 error(0, EINVAL, "Wrong value %s for without timestamp parameter", argv[i]);

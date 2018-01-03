@@ -47,6 +47,7 @@ const char* opt_dump_dir(Dumprotate* drd);
 const char* opt_name_format(Dumprotate* drd);
 DumprotateAction opt_action(Dumprotate* drd);
 const char* opt_config_path(Dumprotate* drd);
+bool opt_wo_timestamps(Dumprotate* drd);
 /* --------------- */
 
 

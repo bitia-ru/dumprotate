@@ -33,3 +33,7 @@ DumprotateAction opt_action(Dumprotate* drd) {
 const char* opt_config_path(Dumprotate* drd) {
     return drd->args.configPath != NULL ? drd->args.configPath : "/etc/dumprotate.conf";
 }
+
+bool opt_wo_timestamps(Dumprotate* drd) {
+    return OPT_ARGS_CONFIG(drd, woTimestamps, 0);
+}
